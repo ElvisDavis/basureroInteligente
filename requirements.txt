@@ -1,0 +1,65 @@
+# ============================================================
+# INTELIGENCIA ARTIFICIAL
+# ============================================================
+
+# Framework utilizado para cargar y ejecutar EfficientNetB0.
+tensorflow==2.21.0
+
+# API de alto nivel utilizada para construir y guardar el modelo.
+keras==3.14.1
+
+# Operaciones numéricas, tensores y preparación de imágenes.
+numpy==2.4.6
+
+
+# ============================================================
+# VISIÓN POR COMPUTADORA
+# ============================================================
+
+# Decodificación, conversión de color y redimensionamiento.
+opencv-python==4.13.0.92
+
+
+# ============================================================
+# API REST
+# ============================================================
+
+# Framework principal del microservicio de IA.
+fastapi==0.137.1
+
+# Servidor ASGI utilizado para ejecutar FastAPI.
+uvicorn==0.49.0
+
+# Validación de esquemas de entrada y salida.
+pydantic==2.13.4
+
+# Permite recibir archivos multipart/form-data.
+python-multipart==0.0.32
+
+
+# ============================================================
+# PRUEBAS AUTOMATIZADAS
+# ============================================================
+
+# Framework utilizado para ejecutar las pruebas.
+pytest==9.1.1
+
+# Cliente HTTP utilizado por TestClient.
+httpx==0.28.1
+
+
+# ============================================================
+# ENTRENAMIENTO Y EVALUACIÓN
+# ============================================================
+
+# Métricas, particiones estratificadas y reportes.
+scikit-learn==1.9.0
+
+# Manipulación de inventarios y resultados tabulares.
+pandas==3.0.3
+
+# Gráficas de entrenamiento y visualización de imágenes.
+matplotlib==3.11.0
+
+# Visualización de matrices de confusión.
+seaborn==0.13.2

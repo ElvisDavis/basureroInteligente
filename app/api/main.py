@@ -1,36 +1,46 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-
+from app.api.config import (API_PREFIX, API_TITULO, API_VERSION,)
 from app.api.routes import router
-from app.api.servicios import servicio 
-
+from app.api.servicios import servicio_ia
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-
-    print("=" *60)
-    print("INICIANDO API")
+async def lifespan(_app: FastAPI):
+    print("=" * 60)
+    print("INICIANDO API DE INTELIGENCIA ARTIFICIAL")
     print("=" * 60)
 
-    servicio.iniciar()
-
+    servicio_ia.cargar()
+    print("API preparada correctamente")
     yield
 
-    print("=" *60)
+    print("=" * 60)
     print("DETENIENDO API")
     print("=" * 60)
-    servicio.detener()
 
-app = FastAPI(
-    title = "SISTEMA INTELIGENTE DE CLASIFICACIÓN DE RESIDUOS",
-    version = "1.0.0",
-    description = "API REST basada en Inteligencia Artificial",
-    lifespan =lifespan
+    servicio_ia.descargar()
+
+app= FastAPI(
+    title = API_TITULO,
+    version = API_VERSION,
+    description =(
+        "Microservicio de clasificación de residuos mediante TensorFlow y EfficentNetB0"
+    ),
+    lifespan = lifespan,
 )
-app.include_router(router)
 
+app.include_router(
+    router,
+    prefix = API_PREFIX,
+    tags = ["Inteligencia artificial"],
+)
 
-
-
-
-    
+@app.get("/")
+def raiz():
+    return{
+        "service": API_TITULO,
+        "version": API_VERSION,
+        "documentation": "/docs",
+        "health": f"{API_PREFIX}/health",
+        "predict":f"{API_PREFIX}/predict",
+    }

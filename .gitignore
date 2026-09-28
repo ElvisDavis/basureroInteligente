@@ -1,0 +1,122 @@
+#PYTHON
+# Código compilado y cahés generadas automáticamente.
+__pycache__/
+*.py[cod]
+*$py.class
+
+#cahe creada por pytest
+.pytest_cache/
+
+#Reportes de cobertura de pruebas
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+#Caches de herramientas de análisis
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.pytype/
+
+#Entornos virtuales
+#Los entornos contienen dependencias instalasdad en cada equipo
+#No deben subirse al repositorio
+.venv/
+venv/
+env/
+ENV/
+
+#archivos de Conda locales
+.conda/
+
+#JupyterNotebook
+#Jupyter crea estas carpetas como copias temporales
+.ipynb_checkpoints/
+
+#Variables de entorno y credenciales
+
+#Estos archivos podrían contener claves, contraseñas,
+#conexiones a bases de datos o secretos JWT
+
+.env
+.env.*
+!.env.example
+
+#Credenciales de Kaggle
+kaggle.json
+
+#Archivos temporales de la API
+
+#Imágnes cargadas temporalmente por clientes
+uploads/
+temp/
+tmp/
+
+#Registros producidos durante la ejecución 
+logs/
+*.log
+
+#Editores
+#visual Studio Code
+.vscode/
+
+#Pycharm e IDEs de JetBrains
+.idea/
+
+#Archivos temporales de Windoes  editores
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+
+#Empaquetado de python
+
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ============================================================
+# NODE.JS
+# ============================================================
+
+# Se utilizarán cuando construyamos el backend Node.js.
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Resultados de compilación del backend.
+backend-node/dist/
+backend-node/coverage/
+
+
+# ============================================================
+# FLUTTER Y DART
+# ============================================================
+
+# Dependencias y compilaciones generadas por Flutter.
+flutter-app/.dart_tool/
+flutter-app/.packages
+flutter-app/.flutter-plugins
+flutter-app/.flutter-plugins-dependencies
+flutter-app/build/
+
+# Configuraciones locales de Android.
+flutter-app/android/local.properties
+
+# Archivos de iOS generados localmente.
+flutter-app/ios/Pods/
+flutter-app/ios/.symlinks/
+
+
+# ============================================================
+# IMPORTANTE: ARCHIVOS QUE NO IGNORAMOS
+# ============================================================
+
+# No ignoramos el modelo .keras porque la API lo necesita.
+# No ignoramos clases.json.
+# No ignoramos todavía el dataset ni las imágenes reales.
