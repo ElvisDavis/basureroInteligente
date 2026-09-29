@@ -1,0 +1,102 @@
+/**
+ * Cliente de Prisma utilizado por el backend Node.js.
+ */
+generator client {
+  provider = "prisma-client-js"
+}
+
+/**
+ * Base de datos PostgreSQL.
+ * La dirección y las credenciales se obtienen de DATABASE_URL.
+ */
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/**
+ * Usuario registrado desde la aplicación Flutter.
+ */
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  points       Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  deposits       Deposit[]
+  pointMovements PointMovement[]
+
+  @@map("users")
+}
+
+/**
+ * Estado de un depósito.
+ * PENDING: esperando confirmación física.
+ * CONFIRMED: el residuo cayó correctamente.
+ * CANCELLED: el proceso fue cancelado.
+ * FAILED: ocurrió un error físico o de comunicación.
+ */
+enum DepositStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  FAILED
+}
+
+/**
+ * Tipo de movimiento realizado sobre los puntos.
+ */
+enum PointMovementType {
+  EARNED
+  ADJUSTMENT
+  REDEEMED
+}
+
+/**
+ * Depósito identificado por la inteligencia artificial.
+ * Los puntos solo se acreditarán cuando la ESP32 confirme
+ * que el objeto realmente cayó.
+ */
+model Deposit {
+  id           String        @id @default(uuid())
+  userId       String
+  predictionId String        @unique
+  wasteClass   String
+  confidence   Float
+  points       Int           @default(0)
+  status       DepositStatus @default(PENDING)
+  createdAt    DateTime      @default(now())
+  confirmedAt  DateTime?
+
+  user          User           @relation(fields: [userId], references: [id])
+  pointMovement PointMovement?
+
+  @@index([userId])
+  @@index([status])
+  @@map("deposits")
+}
+
+/**
+ * Historial contable de los puntos.
+ * Cada movimiento permite conocer cuándo, cuánto y por qué
+ * cambió el saldo del usuario.
+ */
+model PointMovement {
+  id          String            @id @default(uuid())
+  userId      String
+  depositId   String?           @unique
+  amount      Int
+  type        PointMovementType
+  description String
+  createdAt   DateTime          @default(now())
+
+  user    User     @relation(fields: [userId], references: [id])
+  deposit Deposit? @relation(fields: [depositId], references: [id])
+
+  @@index([userId])
+  @@map("point_movements")
+}
