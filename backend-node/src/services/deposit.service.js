@@ -369,3 +369,22 @@ export async function confirmarDeposito(
         "DEPOSIT_CONFIRMATION_FAILED"
     );
 }
+
+/**
+ * Marca un deposito pendiente como fallido
+ * 
+ * Se utiliza cuando no fue posible publicar la orden 
+ * de apertura mediante MQTT
+ */
+
+export async function marcarDepositoFallido(depositId){
+    return prisma.deposit.updateMany({
+        where: {
+            id: depositId,
+            status:"PENDING",
+        },
+        data: {
+            status: "FAILED",
+        },
+    });
+}

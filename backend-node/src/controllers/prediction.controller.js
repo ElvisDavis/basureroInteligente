@@ -5,7 +5,12 @@
 import {
     iniciarDeposito,
     listarDepositosUsuario,
+    marcarDepositoFallido,
 } from "../services/deposit.service.js";
+
+import {publicarApertura} from "../services/mqtt.service.js";
+
+
 
 /**
  * Clasifica una imagen y crea un depósito pendiente.
@@ -43,6 +48,30 @@ export async function predecirResiduo(
                 userId: request.user.id,
                 file: request.file,
             });
+            /**
+             * Solamente publicamos una orden cuando:
+             * - la clase es reciclable
+             * - la confianza supera el mínimo
+             * - el depósito quedo pendiente
+             */
+            let commandPublished = false;
+
+            if (resultado.action.shouldOpen){
+                try{
+                    await publicarApertura({
+                        depositId: resultado.deposit.id,
+                        compartment: resultado.action.compartment,
+                    });
+                    commandPublished = true;
+                }catch(error){
+                    /**
+                     * No dejamos un deposito pendiente si nunca fue
+                     * posible enviar la orden de apertura
+                     */
+                    await marcarDepositoFallido(resultado.deposit.id);
+                    throw error;
+                }
+            }
 
         return response.status(201).json({
             success: true,
@@ -61,6 +90,10 @@ export async function predecirResiduo(
 
             action:
                 resultado.action,
+
+            mqtt: {
+                commandPublished,
+            },
 
             timestamp:
                 new Date().toISOString(),

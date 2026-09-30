@@ -1,0 +1,16 @@
+{
+  "name": "esp32-simulator",
+  "version": "1.0.0",
+  "description": "Simulador MQTT del dispositivo ESP32",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/simulator.js",
+    "dev": "node --watch src/simulator.js",
+    "test": "node --test --test-concurrency=1"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.4",
+    "mqtt": "^5.16.0"
+  }
+}

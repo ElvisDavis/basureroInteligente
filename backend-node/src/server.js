@@ -6,73 +6,92 @@
  */
 
 import app from "./app.js";
+import { prisma } from "./config/database.js";
 import { env } from "./config/env.js";
-
-
-const server = app.listen(
-  env.PORT,
-  "127.0.0.1",
-  () => {
-    console.log(
-      "=".repeat(60)
-    );
-
-    console.log(
-      "BACKEND PRINCIPAL INICIADO"
-    );
-
-    console.log(
-      `Entorno: ${env.NODE_ENV}`
-    );
-
-    console.log(
-      `Dirección: http://127.0.0.1:${env.PORT}`
-    );
-
-    console.log(
-      `FastAPI: ${env.AI_API_URL}`
-    );
-
-    console.log(
-      "=".repeat(60)
-    );
-  }
-);
-
+import {
+    cerrarMqtt,
+    iniciarMqtt,
+} from "./services/mqtt.service.js";
 
 /**
- * Finaliza el servidor sin interrumpir solicitudes activas.
+ * Iniciamos MQTT antes de abrir el servidor HTTP.
+ * El cliente se reconectará automáticamente si Mosquitto
+ * no está disponible temporalmente.
  */
-function cerrarServidor(signal) {
-  console.log(
-    `\nSeñal ${signal} recibida. Cerrando servidor...`
-  );
+iniciarMqtt();
 
-  server.close((error) => {
-    if (error) {
-      console.error(
-        "No fue posible cerrar el servidor:",
-        error
-      );
+const server = app.listen(
+    env.PORT,
+    "127.0.0.1",
+    () => {
+        console.log(
+            "=".repeat(60)
+        );
+        console.log(
+            "BACKEND PRINCIPAL INICIADO"
+        );
+        console.log(
+            `Entorno: ${env.NODE_ENV}`
+        );
+        console.log(
+            `Dirección: http://127.0.0.1:${env.PORT}`
+        );
+        console.log(
+            `FastAPI: ${env.AI_API_URL}`
+        );
+        console.log(
+            `MQTT: ${env.MQTT_URL}`
+        );
+        console.log(
+            "=".repeat(60)
+        );
+    }
+);
 
-      process.exit(1);
+let cerrando = false;
+
+async function cerrarServidor(signal) {
+    if (cerrando) {
+        return;
     }
 
+    cerrando = true;
+
     console.log(
-      "Servidor detenido correctamente."
+        `\nSeñal ${signal} recibida. Cerrando servidor...`
     );
 
-    process.exit(0);
-  });
+    server.close(async (error) => {
+        if (error) {
+            console.error(
+                "No fue posible cerrar HTTP:",
+                error
+            );
+        }
+
+        await cerrarMqtt();
+        await prisma.$disconnect();
+
+        console.log(
+            "Servidor detenido correctamente."
+        );
+
+        process.exit(
+            error ? 1 : 0
+        );
+    });
 }
 
-
 process.on(
-  "SIGINT",
-  () => cerrarServidor("SIGINT")
+    "SIGINT",
+    () => {
+        void cerrarServidor("SIGINT");
+    }
 );
 
 process.on(
-  "SIGTERM",
-  () => cerrarServidor("SIGTERM")
+    "SIGTERM",
+    () => {
+        void cerrarServidor("SIGTERM");
+    }
 );

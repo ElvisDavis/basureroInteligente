@@ -75,9 +75,21 @@ const esquemaEntorno = z.object({
     /**
      * Clave privada de comuniación con el dispositivo
      */
-    DEVICE_API_KEY : z
+    DEVICE_API_KEY: z
         .string()
-        .min(32, "DEVICE_API_KEY debe tener al menos 32 caracteres")
+        .min(
+            32, 
+            "DEVICE_API_KEY debe tener al menos 32 caracteres"
+        ),
+    
+    MQTT_URL: z 
+        .string()
+        .default("mqtt://127.0.0.1:1883"),
+    
+    MQTT_DEVICE_ID: z
+        .string()
+        .min(1)
+        .default("bin-01"),
 });
 
 /**

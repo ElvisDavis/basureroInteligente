@@ -18,6 +18,8 @@ import app from "../src/app.js";
 import { prisma } from "../src/config/database.js";
 import { env } from "../src/config/env.js";
 
+import { cerrarMqtt, esperarConexionMqtt, } from "../src/services/mqtt.service.js";
+
 const fetchOriginal = globalThis.fetch;
 
 const emailPrueba =
@@ -95,6 +97,13 @@ before(async () => {
     );
 });
 
+/**
+ * La ruta de predicción publica una orden MQTT.
+ * por lo que esperamos al broker antes de probar
+ */
+
+await esperarConexionMqtt();
+
 afterEach(() => {
     globalThis.fetch = fetchOriginal;
 });
@@ -120,6 +129,8 @@ after(async () => {
             id: usuario.id,
         },
     });
+
+    await cerrarMqtt();
 });
 
 test(
@@ -207,6 +218,16 @@ test(
         assert.equal(
             respuesta.body.action.compartment,
             "plastic"
+        );
+
+        assert.equal(
+            respuesta.body.mqtt.commandPublished,
+            true
+        );
+
+        assert.equal(
+            respuesta.body.action.shouldOpen,
+            true
         );
     }
 );
