@@ -136,9 +136,7 @@ export async function iniciarDeposito({
 /**
  * Obtiene los últimos depósitos del usuario autenticado.
  */
-export async function listarDepositosUsuario(
-    userId
-) {
+export async function listarDepositosUsuario(userId) {
     return prisma.deposit.findMany({
         where: {
             userId,
@@ -158,4 +156,216 @@ export async function listarDepositosUsuario(
             confirmedAt: true,
         },
     });
+}
+
+/**
+ * Construye un error controlado del servicio
+ */
+function crearErrorDeposito(message, statusCode, code){
+    const error = new Error(message);
+
+    error.statusCode = statusCode;
+    error.code = code;
+
+    return error;
+}
+
+/**
+ * Confirma físicamente un depósito y acredita sus puntos.
+ *
+ * Toda la operación ocurre dentro de una transacción:
+ * - cambia el estado del depósito;
+ * - crea el movimiento;
+ * - incrementa el saldo.
+ *
+ * Si alguna operación falla, PostgreSQL revierte todo.
+ */
+export async function confirmarDeposito(
+    depositId
+) {
+    /**
+     * Reintentamos una transacción si PostgreSQL detecta
+     * una modificación simultánea.
+     */
+    for (
+        let intento = 1;
+        intento <= 3;
+        intento += 1
+    ) {
+        try {
+            return await prisma.$transaction(
+                async (transaction) => {
+                    const deposito =
+                        await transaction.deposit.findUnique({
+                            where: {
+                                id: depositId,
+                            },
+                            select: {
+                                id: true,
+                                userId: true,
+                                wasteClass: true,
+                                confidence: true,
+                                points: true,
+                                status: true,
+                                confirmedAt: true,
+                            },
+                        });
+
+                    if (!deposito) {
+                        throw crearErrorDeposito(
+                            "El depósito no existe.",
+                            404,
+                            "DEPOSIT_NOT_FOUND"
+                        );
+                    }
+
+                    /**
+                     * Una confirmación repetida no vuelve
+                     * a sumar puntos.
+                     */
+                    if (
+                        deposito.status ===
+                        "CONFIRMED"
+                    ) {
+                        const usuario =
+                            await transaction.user.findUnique({
+                                where: {
+                                    id: deposito.userId,
+                                },
+                                select: {
+                                    points: true,
+                                },
+                            });
+
+                        return {
+                            deposit: deposito,
+                            awardedPoints: 0,
+                            userPoints:
+                                usuario.points,
+                            alreadyConfirmed: true,
+                        };
+                    }
+
+                    if (
+                        deposito.status !==
+                        "PENDING"
+                    ) {
+                        throw crearErrorDeposito(
+                            "El depósito no se encuentra pendiente.",
+                            409,
+                            "DEPOSIT_NOT_PENDING"
+                        );
+                    }
+
+                    const regla =
+                        obtenerReglaResiduo(
+                            deposito.wasteClass
+                        );
+
+                    if (
+                        !regla ||
+                        !regla.recyclable
+                    ) {
+                        throw crearErrorDeposito(
+                            "La clasificación no genera puntos.",
+                            409,
+                            "DEPOSIT_NOT_REWARDABLE"
+                        );
+                    }
+
+                    const confirmedAt =
+                        new Date();
+
+                    const depositoActualizado =
+                        await transaction.deposit.update({
+                            where: {
+                                id: deposito.id,
+                            },
+                            data: {
+                                status: "CONFIRMED",
+                                points: regla.points,
+                                confirmedAt,
+                            },
+                            select: {
+                                id: true,
+                                predictionId: true,
+                                wasteClass: true,
+                                confidence: true,
+                                points: true,
+                                status: true,
+                                createdAt: true,
+                                confirmedAt: true,
+                            },
+                        });
+
+                    await transaction.pointMovement.create({
+                        data: {
+                            userId:
+                                deposito.userId,
+                            depositId:
+                                deposito.id,
+                            amount:
+                                regla.points,
+                            type: "EARNED",
+                            description:
+                                `Depósito confirmado: ${deposito.wasteClass}`,
+                        },
+                    });
+
+                    const usuarioActualizado =
+                        await transaction.user.update({
+                            where: {
+                                id: deposito.userId,
+                            },
+                            data: {
+                                points: {
+                                    increment:
+                                        regla.points,
+                                },
+                            },
+                            select: {
+                                points: true,
+                            },
+                        });
+
+                    return {
+                        deposit:
+                            depositoActualizado,
+                        awardedPoints:
+                            regla.points,
+                        userPoints:
+                            usuarioActualizado.points,
+                        alreadyConfirmed: false,
+                    };
+                },
+                {
+                    /**
+                     * Evita que dos confirmaciones simultáneas
+                     * otorguen puntos duplicados.
+                     */
+                    isolationLevel:
+                        "Serializable",
+                }
+            );
+        } catch (error) {
+            /**
+             * P2034 indica conflicto o bloqueo entre
+             * transacciones concurrentes.
+             */
+            if (
+                error.code === "P2034" &&
+                intento < 3
+            ) {
+                continue;
+            }
+
+            throw error;
+        }
+    }
+
+    throw crearErrorDeposito(
+        "No fue posible confirmar el depósito.",
+        503,
+        "DEPOSIT_CONFIRMATION_FAILED"
+    );
 }

@@ -71,6 +71,13 @@ const esquemaEntorno = z.object({
     JWT_EXPIRES_IN: z
         .string()
         .default("8h"),
+    
+    /**
+     * Clave privada de comuniación con el dispositivo
+     */
+    DEVICE_API_KEY : z
+        .string()
+        .min(32, "DEVICE_API_KEY debe tener al menos 32 caracteres")
 });
 
 /**

@@ -16,6 +16,7 @@ import { rutaNoEncontrada } from "./middlewares/not-found.middleware.js";
 import healthRoutes from "./routes/health.routes.js";
 import predictionRoutes from "./routes/prediction.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import internalRoutes from "./routes/internal.routes.js";
 
 const app = express();
 
@@ -101,6 +102,7 @@ app.get("/", (_request, response)=>{
 app.use("/api/v1", authRoutes);
 app.use("/api/v1", healthRoutes);
 app.use("/api/v1", predictionRoutes);
+app.use("/api/v1", internalRoutes)
 
 
 
