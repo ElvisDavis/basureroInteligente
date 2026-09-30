@@ -44,6 +44,33 @@ const esquemaEntorno = z.object({
         .min(1000)
         .max(120000)
         .default(30000),
+
+    /**
+ * Dirección de conexión a PostgreSQL.
+ */
+    DATABASE_URL: z
+        .string()
+        .min(
+            1,
+            "DATABASE_URL es obligatoria"
+        ),
+
+    /**
+     * Clave privada utilizada para firmar los JWT.
+     */
+    JWT_SECRET: z
+        .string()
+        .min(
+            32,
+            "JWT_SECRET debe tener al menos 32 caracteres"
+        ),
+
+    /**
+     * Duración del inicio de sesión.
+     */
+    JWT_EXPIRES_IN: z
+        .string()
+        .default("8h"),
 });
 
 /**
@@ -64,6 +91,8 @@ if (!resultado.success) {
  * Objeto inmutable utilizado por toda la aplicación 
  */
 export const env = Object.freeze(resultado.data);
+
+
 
 
 

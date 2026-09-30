@@ -15,6 +15,8 @@ import { manejarError } from "./middlewares/error.middleware.js";
 import { rutaNoEncontrada } from "./middlewares/not-found.middleware.js";
 import healthRoutes from "./routes/health.routes.js";
 import predictionRoutes from "./routes/prediction.routes.js";
+import authRoutes from "./routes/auth.routes.js";
+
 const app = express();
 
 /**
@@ -82,6 +84,9 @@ app.get("/", (_request, response)=>{
         version: "1.0.0",
         endpoints: {
             health: "GET /api/v1/health",
+            register: "POST /api/v1/auth/register",
+            login: "POST /api/v1/auth/login",
+            profile: "GET /api/v1/auth/me",
             predict: "POST /api/v1/deposits/predict",
         },
     });
@@ -93,8 +98,11 @@ app.get("/", (_request, response)=>{
  * Las rutas declaradas dentro de ambos routers comienzan
  * desde /api/v1
  */
+app.use("/api/v1", authRoutes);
 app.use("/api/v1", healthRoutes);
 app.use("/api/v1", predictionRoutes);
+
+
 
 /**
  * Estos middlewares deben permnecer al final
