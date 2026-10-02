@@ -23,6 +23,7 @@
     "morgan": "^1.12.1",
     "mqtt": "^5.16.0",
     "multer": "^2.4.0",
+    "nodemailer": "^10.0.13",
     "zod": "^4.6.5"
   },
   "devDependencies": {

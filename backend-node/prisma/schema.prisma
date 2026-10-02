@@ -18,14 +18,17 @@ datasource db {
  * Usuario registrado desde la aplicación Flutter.
  */
 model User {
-  id           String   @id @default(uuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  points       Int      @default(0)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                          String   @id @default(uuid())
+  name                        String
+  email                       String   @unique
+  passwordHash                String
+  points                      Int      @default(0)
+  isActive                    Boolean  @default(true)
+  isEmailVerified             Boolean  @default(true)
+  emailVerificationCodeHash   String?
+  emailVerificationExpiresAt  DateTime?
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
 
   deposits       Deposit[]
   pointMovements PointMovement[]

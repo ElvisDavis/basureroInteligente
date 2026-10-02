@@ -1,11 +1,11 @@
 /**
  * Configuración central de variables de entorno.
- * 
+ *
  * Este módulo:
  * 1. Carga el archivo .env
  * 2. Valida las variables con Zod
  * 3. Detiene el backend si la configuración es invalida
- * 
+ *
  * Ningún otro mpodulo debería acceder directamente a process.env
  */
 
@@ -13,107 +13,85 @@ import "dotenv/config";
 import { z } from "zod";
 
 /**
- * Esquema de configuración 
- * 
+ * Esquema de configuración
+ *
  * z.coerce.number() convierte el puerto recibido como texto
  * en un número antes de validarlo
  */
 const esquemaEntorno = z.object({
-    PORT: z.coerce
-        .number()
-        .int()
-        .min(1)
-        .max(65535)
-        .default(3000),
-    NODE_ENV: z
-        .enum(["development", "test", "production"])
-        .default("development"),
+  PORT: z.coerce.number().int().min(1).max(65535).default(3000),
+  NODE_ENV: z
+    .enum(["development", "test", "production"])
+    .default("development"),
 
-    AI_API_URL: z
-        .string()
-        .url()
-        .default("http://127.0.0.1:8000"),
+  AI_API_URL: z.string().url().default("http://127.0.0.1:8000"),
 
-    CORS_ORIGIN: z
-        .string()
-        .default("*"),
+  CORS_ORIGIN: z.string().default("*"),
 
-    AI_API_TIMEOUT_MS: z.coerce
-        .number()
-        .int()
-        .min(1000)
-        .max(120000)
-        .default(30000),
+  AI_API_TIMEOUT_MS: z.coerce
+    .number()
+    .int()
+    .min(1000)
+    .max(120000)
+    .default(30000),
 
-    /**
- * Dirección de conexión a PostgreSQL.
- */
-    DATABASE_URL: z
-        .string()
-        .min(
-            1,
-            "DATABASE_URL es obligatoria"
-        ),
+  /**
+   * Dirección de conexión a PostgreSQL.
+   */
+  DATABASE_URL: z.string().min(1, "DATABASE_URL es obligatoria"),
 
-    /**
-     * Clave privada utilizada para firmar los JWT.
-     */
-    JWT_SECRET: z
-        .string()
-        .min(
-            32,
-            "JWT_SECRET debe tener al menos 32 caracteres"
-        ),
+  /**
+   * Clave privada utilizada para firmar los JWT.
+   */
+  JWT_SECRET: z
+    .string()
+    .min(32, "JWT_SECRET debe tener al menos 32 caracteres"),
 
-    /**
-     * Duración del inicio de sesión.
-     */
-    JWT_EXPIRES_IN: z
-        .string()
-        .default("8h"),
-    
-    /**
-     * Clave privada de comuniación con el dispositivo
-     */
-    DEVICE_API_KEY: z
-        .string()
-        .min(
-            32, 
-            "DEVICE_API_KEY debe tener al menos 32 caracteres"
-        ),
-    
-    MQTT_URL: z 
-        .string()
-        .default("mqtt://127.0.0.1:1883"),
-    
-    MQTT_DEVICE_ID: z
-        .string()
-        .min(1)
-        .default("bin-01"),
+  /**
+   * Duración del inicio de sesión.
+   */
+  JWT_EXPIRES_IN: z.string().default("8h"),
+
+  /**
+   * Clave privada de comuniación con el dispositivo
+   */
+  DEVICE_API_KEY: z
+    .string()
+    .min(32, "DEVICE_API_KEY debe tener al menos 32 caracteres"),
+
+  MQTT_URL: z.string().default("mqtt://127.0.0.1:1883"),
+
+  MQTT_DEVICE_ID: z.string().min(1).default("bin-01"),
+
+  SMTP_USER: z.string().email("SMTP_USER debe ser un correo válido"),
+
+  SMTP_PASS: z.string().min(16, "SMTP_PASS debe tener al menos 16 caracteres"),
+
+  SMTP_FROM_NAME: z.string().min(1).default("SmartBin Backend"),
+
+  EMAIL_VERIFICATION_EXPIRES_MINUTES: z.coerce
+    .number()
+    .int()
+    .min(5)
+    .max(60)
+    .default(10),
 });
 
 /**
- * safeParse permite controlar el error sin mostrar información 
+ * safeParse permite controlar el error sin mostrar información
  * sensible ni un traceback innecesario
  */
 const resultado = esquemaEntorno.safeParse(process.env);
 
 if (!resultado.success) {
-    console.error("Configuración inválida del backend:");
+  console.error("Configuración inválida del backend:");
 
-    console.error(z.prettifyError(resultado.error));
+  console.error(z.prettifyError(resultado.error));
 
-    process.exit(1);
+  process.exit(1);
 }
 
 /**
- * Objeto inmutable utilizado por toda la aplicación 
+ * Objeto inmutable utilizado por toda la aplicación
  */
 export const env = Object.freeze(resultado.data);
-
-
-
-
-
-
-

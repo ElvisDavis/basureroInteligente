@@ -34,6 +34,112 @@ class ApiService {
     return token != null && token.isNotEmpty;
   }
 
+  /// Registra un usuario y solicita el envío del código.
+  Future<Map<String, dynamic>> register({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.registerUrl),
+            headers: const {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({
+              'name': name.trim(),
+              'email': email.trim().toLowerCase(),
+              'password': password,
+            }),
+          )
+          .timeout(const Duration(seconds: 20));
+
+      final body = _decodeResponse(response);
+
+      if (response.statusCode != 201) {
+        throw ApiException(
+          _extractErrorMessage(body, 'No fue posible registrar el usuario.'),
+        );
+      }
+
+      return body;
+    } on ApiException {
+      rethrow;
+    } on Object {
+      throw const ApiException('No fue posible conectar con el servidor.');
+    }
+  }
+
+  /// Verifica el correo mediante el código de seis dígitos.
+  Future<Map<String, dynamic>> verifyEmail({
+    required String email,
+    required String code,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.verifyEmailUrl),
+            headers: const {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({
+              'email': email.trim().toLowerCase(),
+              'code': code.trim(),
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      final body = _decodeResponse(response);
+
+      if (response.statusCode != 200) {
+        throw ApiException(
+          _extractErrorMessage(body, 'No fue posible verificar el correo.'),
+        );
+      }
+
+      return body;
+    } on ApiException {
+      rethrow;
+    } on Object {
+      throw const ApiException('No fue posible conectar con el servidor.');
+    }
+  }
+
+  /// Solicita un código de verificación nuevo.
+  Future<Map<String, dynamic>> resendVerification({
+    required String email,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.resendVerificationUrl),
+            headers: const {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({'email': email.trim().toLowerCase()}),
+          )
+          .timeout(const Duration(seconds: 20));
+
+      final body = _decodeResponse(response);
+
+      if (response.statusCode != 200) {
+        throw ApiException(
+          _extractErrorMessage(body, 'No fue posible reenviar el código.'),
+        );
+      }
+
+      return body;
+    } on ApiException {
+      rethrow;
+    } on Object {
+      throw const ApiException('No fue posible conectar con el servidor.');
+    }
+  }
+
   /// Inicia sesión y guarda el token JWT.
   Future<Map<String, dynamic>> login({
     required String email,
@@ -151,13 +257,14 @@ class ApiService {
       });
 
       final bytes = await image.readAsBytes();
-      final contentType = _imageContentType(image.name);
+      final contentType = _imageContentType(image);
+      final uploadFileName = _normalizedImageName(image.name, contentType);
 
       request.files.add(
         http.MultipartFile.fromBytes(
           'image',
           bytes,
-          filename: image.name,
+          filename: uploadFileName,
           contentType: contentType,
         ),
       );
@@ -238,8 +345,22 @@ class ApiService {
     return fallback;
   }
 
-  MediaType _imageContentType(String fileName) {
-    final normalizedName = fileName.toLowerCase();
+  MediaType _imageContentType(XFile image) {
+    final mimeType = image.mimeType?.toLowerCase();
+
+    if (mimeType == 'image/png') {
+      return MediaType('image', 'png');
+    }
+
+    if (mimeType == 'image/webp') {
+      return MediaType('image', 'webp');
+    }
+
+    if (mimeType == 'image/jpeg' || mimeType == 'image/jpg') {
+      return MediaType('image', 'jpeg');
+    }
+
+    final normalizedName = image.name.toLowerCase();
 
     if (normalizedName.endsWith('.png')) {
       return MediaType('image', 'png');
@@ -253,9 +374,41 @@ class ApiService {
       return MediaType('image', 'jpeg');
     }
 
+    /*
+   * camera_web puede generar una captura sin extensión
+   * y sin exponer mimeType. La cámara está configurada
+   * para producir JPEG, por lo que usamos ese formato.
+   */
+    if (!normalizedName.contains('.')) {
+      return MediaType('image', 'jpeg');
+    }
+
     throw const ApiException(
       'Formato de imagen no permitido. '
       'Utiliza JPG, JPEG, PNG o WEBP.',
     );
+  }
+
+  String _normalizedImageName(String originalName, MediaType contentType) {
+    final normalizedName = originalName.toLowerCase();
+
+    final hasAllowedExtension =
+        normalizedName.endsWith('.jpg') ||
+        normalizedName.endsWith('.jpeg') ||
+        normalizedName.endsWith('.png') ||
+        normalizedName.endsWith('.webp');
+
+    if (hasAllowedExtension) {
+      return originalName;
+    }
+
+    final extension = switch (contentType.subtype) {
+      'png' => 'png',
+      'webp' => 'webp',
+      _ => 'jpg',
+    };
+
+    return 'smartbin_${DateTime.now().millisecondsSinceEpoch}'
+        '.$extension';
   }
 }

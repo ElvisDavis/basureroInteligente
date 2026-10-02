@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../config/app_theme.dart';
 import '../services/api_service.dart';
+import 'register_screen.dart';
+import 'verification_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, required this.onAuthenticated});
@@ -124,7 +126,52 @@ class _LoginScreenState extends State<LoginScreen> {
                           _buildPasswordField(),
                           const SizedBox(height: 24),
                           _buildLoginButton(),
-                          const SizedBox(height: 22),
+                          const SizedBox(height: 10),
+                          TextButton(
+                            onPressed: _isLoading
+                                ? null
+                                : () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute<void>(
+                                        builder: (_) => const RegisterScreen(),
+                                      ),
+                                    );
+                                  },
+                            child: const Text(
+                              '¿No tienes una cuenta? Regístrate',
+                              style: TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                          TextButton.icon(
+                            onPressed: _isLoading
+                                ? null
+                                : () {
+                                    final email = _emailController.text.trim();
+
+                                    if (email.isEmpty ||
+                                        !email.contains('@') ||
+                                        !email.contains('.')) {
+                                      _showError(
+                                        'Ingresa primero tu correo electrónico.',
+                                      );
+                                      return;
+                                    }
+
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute<void>(
+                                        builder: (_) =>
+                                            VerificationScreen(email: email),
+                                      ),
+                                    );
+                                  },
+                            icon: const Icon(Icons.mark_email_read_outlined),
+                            label: const Text(
+                              'Verificar mi correo',
+                              style: TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+
                           const _EcologyMessage(),
                         ],
                       ),
@@ -158,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 18),
         const Text(
-          'SmartBin',
+          'AllpaVision',
           textAlign: TextAlign.center,
           style: TextStyle(
             color: AppColors.forest,

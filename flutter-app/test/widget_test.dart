@@ -5,26 +5,37 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smartbin_app/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+  });
+
+  testWidgets('muestra la pantalla de inicio de sesión', (tester) async {
     await tester.pumpWidget(const SmartBinApp());
+    await tester.pumpAndSettle();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Iniciar sesión'), findsOneWidget);
+    expect(find.text('¿No tienes una cuenta? Regístrate'), findsOneWidget);
+    expect(find.text('Verificar mi correo'), findsOneWidget);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('permite abrir la pantalla de registro', (tester) async {
+    await tester.pumpWidget(const SmartBinApp());
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.tap(find.text('¿No tienes una cuenta? Regístrate'));
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Únete a SmartBin'), findsOneWidget);
+    expect(find.text('Nombre completo'), findsOneWidget);
+    expect(find.text('Correo electrónico'), findsOneWidget);
+    expect(find.text('Confirmar contraseña'), findsOneWidget);
   });
 }

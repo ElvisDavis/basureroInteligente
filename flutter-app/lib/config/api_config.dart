@@ -16,6 +16,13 @@ abstract final class ApiConfig {
 
   static String get loginUrl => '$baseUrl/auth/login';
 
+  static String get registerUrl => '$baseUrl/auth/register';
+
+  static String get verifyEmailUrl => '$baseUrl/auth/verify-email';
+
+  static String get resendVerificationUrl =>
+      '$baseUrl/auth/resend-verification';
+
   static String get profileUrl => '$baseUrl/auth/me';
 
   static String get predictionUrl => '$baseUrl/deposits/predict';

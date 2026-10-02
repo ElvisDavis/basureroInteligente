@@ -84,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Icon(Icons.eco_rounded, color: AppColors.emerald),
             SizedBox(width: 10),
-            Text('SmartBin', style: TextStyle(fontWeight: FontWeight.w800)),
+            Text('ALLPAVISION', style: TextStyle(fontWeight: FontWeight.w800)),
           ],
         ),
         actions: [

@@ -6,6 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import '../config/app_theme.dart';
 import '../services/api_service.dart';
 
+import 'automatic_camera_screen.dart';
+
 class ClassificationScreen extends StatefulWidget {
   const ClassificationScreen({super.key});
 
@@ -66,6 +68,50 @@ class _ClassificationScreenState extends State<ClassificationScreen> {
         'No fue posible seleccionar '
         'la imagen.',
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSelecting = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _openAutomaticCamera() async {
+    if (_isSelecting || _isClassifying) {
+      return;
+    }
+
+    setState(() {
+      _isSelecting = true;
+    });
+
+    try {
+      final image = await Navigator.of(context).push<XFile>(
+        MaterialPageRoute<XFile>(builder: (_) => const AutomaticCameraScreen()),
+      );
+
+      if (image == null) {
+        return;
+      }
+
+      final bytes = await image.readAsBytes();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _selectedImage = image;
+        _imageBytes = bytes;
+        _result = null;
+      });
+    } on Object {
+      if (!mounted) {
+        return;
+      }
+
+      _showMessage('No fue posible obtener la imagen de la cámara.');
     } finally {
       if (mounted) {
         setState(() {
@@ -156,9 +202,7 @@ class _ClassificationScreenState extends State<ClassificationScreen> {
                     onGallery: () {
                       _selectImage(ImageSource.gallery);
                     },
-                    onCamera: () {
-                      _selectImage(ImageSource.camera);
-                    },
+                    onCamera: _openAutomaticCamera,
                   )
                 else
                   _ImagePreview(
