@@ -38,10 +38,16 @@ class _AutomaticCameraScreenState extends State<AutomaticCameraScreen> {
         );
       }
 
-      final camera = cameras.firstWhere(
-        (item) => item.lensDirection == CameraLensDirection.back,
-        orElse: () => cameras.first,
+      final frontCameras = cameras.where(
+        (camera) => camera.lensDirection == CameraLensDirection.front,
       );
+      if (frontCameras.isEmpty) {
+        throw CameraException(
+          'NO_FRONT_CAMERA',
+          'No se encontro una camara frontal dis´pnoble',
+        );
+      }
+      final camera = frontCameras.first;
 
       final controller = CameraController(
         camera,

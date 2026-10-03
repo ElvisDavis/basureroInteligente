@@ -22,7 +22,7 @@ iniciarMqtt();
 
 const server = app.listen(
     env.PORT,
-    "127.0.0.1",
+    "0.0.0.0",
     () => {
         console.log(
             "=".repeat(60)
@@ -34,7 +34,7 @@ const server = app.listen(
             `Entorno: ${env.NODE_ENV}`
         );
         console.log(
-            `Dirección: http://127.0.0.1:${env.PORT}`
+            `Dirección: http://0.0.0.0:${env.PORT}`
         );
         console.log(
             `FastAPI: ${env.AI_API_URL}`

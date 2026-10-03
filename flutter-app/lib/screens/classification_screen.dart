@@ -27,6 +27,7 @@ class _ClassificationScreenState extends State<ClassificationScreen> {
 
   bool _isSelecting = false;
   bool _isClassifying = false;
+  bool _hasClassified = false;
 
   Future<void> _selectImage(ImageSource source) async {
     if (_isSelecting || _isClassifying) {
@@ -58,6 +59,7 @@ class _ClassificationScreenState extends State<ClassificationScreen> {
         _selectedImage = image;
         _imageBytes = bytes;
         _result = null;
+        _hasClassified = false;
       });
     } on Object {
       if (!mounted) {
@@ -105,6 +107,7 @@ class _ClassificationScreenState extends State<ClassificationScreen> {
         _selectedImage = image;
         _imageBytes = bytes;
         _result = null;
+        _hasClassified = false;
       });
     } on Object {
       if (!mounted) {
@@ -124,7 +127,7 @@ class _ClassificationScreenState extends State<ClassificationScreen> {
   Future<void> _classifyImage() async {
     final image = _selectedImage;
 
-    if (image == null || _isClassifying) {
+    if (image == null || _isClassifying || _hasClassified) {
       return;
     }
 
@@ -142,19 +145,16 @@ class _ClassificationScreenState extends State<ClassificationScreen> {
 
       setState(() {
         _result = result;
+        _hasClassified = true;
       });
     } on ApiException catch (error) {
-      if (!mounted) {
-        return;
+      if (mounted) {
+        _showMessage(error.message);
       }
-
-      _showMessage(error.message);
     } on Object {
-      if (!mounted) {
-        return;
+      if (mounted) {
+        _showMessage('Ocurrió un error inesperado.');
       }
-
-      _showMessage('Ocurrió un error inesperado.');
     } finally {
       if (mounted) {
         setState(() {
@@ -169,6 +169,7 @@ class _ClassificationScreenState extends State<ClassificationScreen> {
       _selectedImage = null;
       _imageBytes = null;
       _result = null;
+      _hasClassified = false;
     });
   }
 
@@ -211,6 +212,7 @@ class _ClassificationScreenState extends State<ClassificationScreen> {
                     isClassifying: _isClassifying,
                     onClear: _clearImage,
                     onClassify: _classifyImage,
+                    hasClassified: _hasClassified,
                   ),
                 if (_isClassifying) ...[
                   const SizedBox(height: 20),
@@ -362,6 +364,7 @@ class _ImagePreview extends StatelessWidget {
     required this.isClassifying,
     required this.onClear,
     required this.onClassify,
+    required this.hasClassified,
   });
 
   final Uint8List imageBytes;
@@ -369,6 +372,7 @@ class _ImagePreview extends StatelessWidget {
   final bool isClassifying;
   final VoidCallback onClear;
   final VoidCallback onClassify;
+  final bool hasClassified;
 
   @override
   Widget build(BuildContext context) {
@@ -414,9 +418,17 @@ class _ImagePreview extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton.icon(
-                  onPressed: isClassifying ? null : onClassify,
-                  icon: const Icon(Icons.auto_awesome_rounded),
-                  label: const Text('Clasificar residuo'),
+                  onPressed: isClassifying || hasClassified ? null : onClassify,
+                  icon: Icon(
+                    hasClassified
+                        ? Icons.check_circle_rounded
+                        : Icons.auto_awesome_rounded,
+                  ),
+                  label: Text(
+                    hasClassified
+                        ? 'Residuo clasificado'
+                        : 'Clasificar residuo',
+                  ),
                 ),
               ),
             ],

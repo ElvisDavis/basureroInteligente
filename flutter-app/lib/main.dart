@@ -45,7 +45,7 @@ class _SmartBinAppState extends State<SmartBinApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'SmartBin',
+      title: 'AllpaVision',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       home: FutureBuilder<bool>(
