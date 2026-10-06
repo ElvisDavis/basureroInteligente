@@ -9,7 +9,7 @@ abstract final class ApiConfig {
     if (defaultTargetPlatform == TargetPlatform.android) {
       //Dirección especial para acceder al computador
       //desde el emulador Android
-      return 'http://172.17.0.168:3000/api/v1';
+      return 'http://191.168.0.223:3000/api/v1';
     }
     return 'http://127.0.0.1:3000/api/v1';
   }

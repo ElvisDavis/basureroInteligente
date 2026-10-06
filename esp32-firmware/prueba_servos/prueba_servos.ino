@@ -6,7 +6,7 @@ Adafruit_PWMServoDriver pca(0x40);
 // Prueba para servos de posicion: ajustar al modelo antes de montar puertas.
 const uint16_t POSICION_A_US = 1250;
 const uint16_t POSICION_B_US = 1500;
-const unsigned long PAUSA_MS = 3000;
+const unsigned long PAUSA_MS = 5000;
 
 void moverTodos(uint16_t pulsoUs) {
   const uint16_t ticks = (uint32_t(pulsoUs) * 4096UL) / 20000UL;
@@ -28,15 +28,19 @@ void setup() {
 
   pca.setPWMFreq(50);
   delay(10);
-  Serial.println("Prueba: cuatro servos, canales 0 a 3, pausa de 3 segundos.");
+  moverTodos(POSICION_A_US);
+  delay(1000);
+  Serial.println("Prueba: servos uno a uno, canales 0 a 3, pausa de 5 segundos.");
 }
 
 void loop() {
-  Serial.println("Posicion A");
-  moverTodos(POSICION_A_US);
-  delay(PAUSA_MS);
-
-  Serial.println("Posicion B");
-  moverTodos(POSICION_B_US);
-  delay(PAUSA_MS);
+  for (uint8_t canal = 0; canal < 4; canal++) {
+    Serial.print("Moviendo servo del canal ");
+    Serial.println(canal);
+    pca.setPWM(canal, 0, (uint32_t(POSICION_B_US) * 4096UL) / 20000UL);
+    delay(PAUSA_MS);
+    pca.setPWM(canal, 0, (uint32_t(POSICION_A_US) * 4096UL) / 20000UL);
+    // Tiempo para regresar antes de mover el siguiente servo.
+    delay(1000);
+  }
 }
